@@ -1,0 +1,78 @@
+.hero {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--parkflow-gradient, linear-gradient(135deg, #1A4C7F 0%, #00AACC 100%));
+  color: white;
+  border-radius: 1rem;
+  margin-bottom: 3rem;
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tagline {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    margin-bottom: 2rem;
+  }
+
+  .actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .btn-outline {
+      border-color: rgba(255, 255, 255, 0.8);
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+}
+
+.features {
+  h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #1A4C7F;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .card {
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    text-align: center;
+    transition: box-shadow 0.2s;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .icon {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    h3 {
+      color: #1A4C7F;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+  }
+}
