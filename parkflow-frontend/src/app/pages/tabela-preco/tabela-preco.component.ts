@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { TabelaPrecoService, TabelaPreco, TabelaPrecoCreate, TabelaPrecoUpdate } from '../../core/services/tabela-preco.service';
 import { TipoVeiculoService } from '../../core/services/tipo-veiculo.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -25,8 +26,9 @@ export class TabelaPrecoComponent implements OnInit {
 
   constructor(
     public tabelaPrecoService: TabelaPrecoService,
-    public tipoVeiculoService: TipoVeiculoService
-  ) {}
+    public tipoVeiculoService: TipoVeiculoService,
+    private notification: NotificationService
+  ) { }
 
   ngOnInit(): void {
     this.tipoVeiculoService.listar().subscribe({
@@ -39,6 +41,7 @@ export class TabelaPrecoComponent implements OnInit {
   }
 
   carregar(): void {
+    this.erro = '';
     this.tabelaPrecoService.listar().subscribe({
       next: (r) => (this.dataSource.data = r),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -50,12 +53,14 @@ export class TabelaPrecoComponent implements OnInit {
   }
 
   salvar(): void {
+    this.erro = '';
     // if (!this.form.id_tipo_veiculo || this.form.valor_hora == null) return;
     if (this.editando) {
       this.salvarEdicao(this.editando, this.form);
     } else {
       this.tabelaPrecoService.criar(this.form).subscribe({
         next: () => {
+          this.notification.sucesso('Preço cadastrado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -67,7 +72,7 @@ export class TabelaPrecoComponent implements OnInit {
   private limparForm(): void {
     this.editando = null;
     this.form = {
-      id_tipo_veiculo: this.tiposVeiculo[0]?.id_tipo_veiculo || 0,
+      id_tipo_veiculo: 0,
       valor_hora: 0
     };
   }
@@ -82,8 +87,10 @@ export class TabelaPrecoComponent implements OnInit {
   }
 
   salvarEdicao(id: number, d: TabelaPrecoUpdate): void {
+    this.erro = '';
     this.tabelaPrecoService.atualizar(id, d).subscribe({
       next: () => {
+        this.notification.sucesso('Preço atualizado com sucesso!');
         this.limparForm();
         this.carregar();
       },
@@ -92,13 +99,18 @@ export class TabelaPrecoComponent implements OnInit {
   }
 
   cancelarEdicao(): void {
+    this.erro = '';
     this.limparForm();
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir este preço?')) return;
     this.tabelaPrecoService.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Preço excluído com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

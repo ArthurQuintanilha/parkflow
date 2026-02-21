@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { TipoClienteService, TipoCliente } from '../../core/services/tipo-cliente.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -19,13 +20,17 @@ export class TiposClienteComponent implements OnInit {
   editando: number | null = null;
   erro = '';
 
-  constructor(public service: TipoClienteService) {}
+  constructor(
+    public service: TipoClienteService,
+    private notification: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.carregar();
   }
 
   carregar(): void {
+    this.erro = '';
     this.service.listar().subscribe({
       next: (r) => (this.dataSource.data = r),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -33,11 +38,13 @@ export class TiposClienteComponent implements OnInit {
   }
   
   salvar(): void {
+    this.erro = '';
     const d = this.form.descricao.trim();
     // if (!d) return;
     if (this.editando) {
       this.service.atualizar(this.editando, d).subscribe({
         next: () => {
+          this.notification.sucesso('Tipo de cliente atualizado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -46,6 +53,7 @@ export class TiposClienteComponent implements OnInit {
     } else {
       this.service.criar(d).subscribe({
         next: () => {
+          this.notification.sucesso('Tipo de cliente criado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -70,13 +78,18 @@ export class TiposClienteComponent implements OnInit {
   }
 
   cancelarEdicao(): void {
+    this.erro = '';
     this.limparForm();
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir este tipo?')) return;
     this.service.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Tipo de cliente excluído com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

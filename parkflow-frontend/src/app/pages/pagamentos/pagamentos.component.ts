@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { PagamentoService, Pagamento, PagamentoCreate, PagamentoUpdate } from '../../core/services/pagamento.service';
 import { MovimentacaoService } from '../../core/services/movimentacao.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -31,11 +32,11 @@ export class PagamentosComponent implements OnInit {
 
   constructor(
     public pagamentoService: PagamentoService,
-    public movimentacaoService: MovimentacaoService
+    public movimentacaoService: MovimentacaoService,
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
-    this.form.data_pagamento = new Date().toISOString().slice(0, 16);
     this.movimentacaoService.listar().subscribe({
       next: (r) => {
         this.movimentacoesSelect = r.map((m) => ({ value: m.id_movimentacao, label: '#' + m.id_movimentacao }));
@@ -50,6 +51,7 @@ export class PagamentosComponent implements OnInit {
   }
 
   carregar(): void {
+    this.erro = '';
     this.pagamentoService.listar().subscribe({
       next: (r) => (this.dataSource.data = r),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -57,6 +59,7 @@ export class PagamentosComponent implements OnInit {
   }
 
   salvar(): void {
+    this.erro = '';
     // if (!this.form.id_movimentacao || !this.form.forma_pagamento.trim() || !this.form.data_pagamento) return;
     const dt = this.form.data_pagamento.replace('T', ' ');
     const payload = { ...this.form, data_pagamento: dt.length === 16 ? dt + ':00' : dt };
@@ -65,6 +68,7 @@ export class PagamentosComponent implements OnInit {
     } else {
       this.pagamentoService.criar(payload).subscribe({
         next: () => {
+          this.notification.sucesso('Pagamento criado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -80,6 +84,7 @@ export class PagamentosComponent implements OnInit {
       forma_pagamento: '',
       data_pagamento:''
     };
+    this.erro = '';
   }
 
   iniciarEdicao(item: Pagamento): void {
@@ -98,10 +103,12 @@ export class PagamentosComponent implements OnInit {
   }
 
   salvarEdicao(id: number, d: PagamentoUpdate): void {
+    this.erro = '';
     const dt = (d.data_pagamento ?? '').replace('T', ' ');
     const payload = { ...d, data_pagamento: dt.length === 16 ? dt + ':00' : dt };
     this.pagamentoService.atualizar(id, payload).subscribe({
       next: () => {
+        this.notification.sucesso('Pagamento atualizado com sucesso!');
         this.limparForm();
         this.carregar();
       },
@@ -110,13 +117,18 @@ export class PagamentosComponent implements OnInit {
   }
 
   cancelarEdicao(): void {
+    this.erro = '';
     this.limparForm();
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir este pagamento?')) return;
     this.pagamentoService.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Pagamento excluído com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

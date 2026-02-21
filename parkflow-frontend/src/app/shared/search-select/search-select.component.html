@@ -1,13 +1,13 @@
 <div (click)="onContainerClick()" class="relative w-full">
   <div
-    class="relative flex min-h-[44px] w-full overflow-hidden rounded-lg "
+    class="relative flex h-[50px] min-h-[50px] w-full overflow-hidden rounded-lg"
     [ngClass]="{
       'bg-surface-dark': inputDark,
       'bg-surface-light': !inputDark,
       'cursor-not-allowed opacity-60': isDisabled,
     }"
   >
-    <div class="relative flex w-full items-center px-4">
+    <div class="relative flex min-h-full w-full items-center px-4">
       <input
         #inputRef
         type="text"
@@ -24,7 +24,7 @@
       />
     </div>
 
-    <div class="flex items-center pe-2">
+    <div class="flex min-h-full items-center pe-2">
       <button
         *ngIf="value && !isDisabled"
         type="button"

@@ -3,6 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { VagaService, Vaga, VagaCreate, VagaUpdate } from '../../core/services/vaga.service';
 import { TipoVagaService } from '../../core/services/tipo-vaga.service';
 import { EstacionamentoService } from '../../core/services/estacionamento.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -28,8 +29,9 @@ export class VagasComponent implements OnInit {
   constructor(
     public vagaService: VagaService,
     public tipoVagaService: TipoVagaService,
-    public estacionamentoService: EstacionamentoService
-  ) {}
+    public estacionamentoService: EstacionamentoService,
+    private notification: NotificationService
+  ) { }
 
   ngOnInit(): void {
     this.tipoVagaService.listar().subscribe({ next: (r) => (this.tiposVaga = r) });
@@ -38,6 +40,7 @@ export class VagasComponent implements OnInit {
   }
 
   carregar(): void {
+    this.erro = '';
     this.vagaService.listar().subscribe({
       next: (r) => (this.dataSource.data = r),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -53,12 +56,14 @@ export class VagasComponent implements OnInit {
   }
 
   salvar(): void {
+    this.erro = '';
     // if (!this.form.numero || !this.form.id_tipo_vaga || !this.form.id_estacionamento) return;
     if (this.editando) {
       this.salvarEdicao(this.editando, this.form);
     } else {
       this.vagaService.criar(this.form).subscribe({
         next: () => {
+          this.notification.sucesso('Vaga criada com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -72,7 +77,7 @@ export class VagasComponent implements OnInit {
     this.form = {
       numero: 0,
       id_tipo_vaga: this.tiposVaga[0]?.id_tipo_vaga || 0,
-      id_estacionamento: this.estacionamentos[0]?.id_estacionamento || 0
+      id_estacionamento: 0
     };
   }
 
@@ -87,8 +92,10 @@ export class VagasComponent implements OnInit {
   }
 
   salvarEdicao(id: number, d: VagaUpdate): void {
+    this.erro = '';
     this.vagaService.atualizar(id, d).subscribe({
       next: () => {
+        this.notification.sucesso('Vaga atualizada com sucesso!');
         this.limparForm();
         this.carregar();
       },
@@ -97,13 +104,18 @@ export class VagasComponent implements OnInit {
   }
 
   cancelarEdicao(): void {
+    this.erro = '';
     this.limparForm();
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir esta vaga?')) return;
     this.vagaService.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Vaga excluída com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

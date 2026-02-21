@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { ClienteService, Cliente, ClienteCreate, ClienteUpdate } from '../../core/services/cliente.service';
 import { TipoClienteService } from '../../core/services/tipo-cliente.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -27,7 +28,8 @@ export class ClientesComponent implements OnInit {
 
   constructor(
     public clienteService: ClienteService,
-    public tipoClienteService: TipoClienteService
+    public tipoClienteService: TipoClienteService,
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -36,6 +38,7 @@ export class ClientesComponent implements OnInit {
   }
 
   carregar(): void {
+    this.erro = '';
     this.clienteService.listar(true).subscribe({
       next: (r) => (this.dataSource.data = r as Cliente[]),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -48,12 +51,14 @@ export class ClientesComponent implements OnInit {
   }
 
   salvar(): void {
+    this.erro = '';
     // if (!this.form.nome.trim() || !this.form.cpf.trim() || !this.form.id_tipo_cliente) return;
     if (this.editando) {
       this.salvarEdicao(this.editando, this.form);
     } else {
       this.clienteService.criar(this.form).subscribe({
         next: () => {
+          this.notification.sucesso('Cliente criado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -86,8 +91,10 @@ export class ClientesComponent implements OnInit {
   }
 
   salvarEdicao(id: number, d: ClienteUpdate): void {
+    this.erro = '';
     this.clienteService.atualizar(id, d).subscribe({
       next: () => {
+        this.notification.sucesso('Cliente atualizado com sucesso!');
         this.limparForm();
         this.carregar();
       },
@@ -96,13 +103,18 @@ export class ClientesComponent implements OnInit {
   }
 
   cancelarEdicao(): void {
+    this.erro = '';
     this.limparForm();
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir este cliente?')) return;
     this.clienteService.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Cliente excluído com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

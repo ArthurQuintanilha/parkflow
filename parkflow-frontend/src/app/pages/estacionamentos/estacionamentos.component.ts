@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { EstacionamentoService, Estacionamento, EstacionamentoCreate, VagaComTipo } from '../../core/services/estacionamento.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -25,13 +26,17 @@ export class EstacionamentosComponent implements OnInit {
 
   expandedRowWhen = (index: number, row: Estacionamento) => this.vagasAbertas === row.id_estacionamento;
 
-  constructor(public service: EstacionamentoService) {}
+  constructor(
+    public service: EstacionamentoService,
+    private notification: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.carregar();
   }
 
   carregar(): void {
+    this.erro = '';
     this.service.listar().subscribe({
       next: (r) => (this.dataSource.data = r),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -39,10 +44,12 @@ export class EstacionamentosComponent implements OnInit {
   }
 
   salvar(): void {
+    this.erro = '';
     // if (!this.form.nome.trim() || !this.form.endereco.trim() || !this.form.cidade.trim()) return;
     if (this.editando) {
       this.service.atualizar(this.editando, this.form).subscribe({
         next: () => {
+          this.notification.sucesso('Estacionamento atualizado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -51,6 +58,7 @@ export class EstacionamentosComponent implements OnInit {
     } else {
       this.service.criar(this.form).subscribe({
         next: () => {
+          this.notification.sucesso('Estacionamento criado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -77,9 +85,13 @@ export class EstacionamentosComponent implements OnInit {
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir este estacionamento?')) return;
     this.service.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Estacionamento excluído com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

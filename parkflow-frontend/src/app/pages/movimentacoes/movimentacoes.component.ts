@@ -4,6 +4,7 @@ import { MovimentacaoService, Movimentacao, MovimentacaoCreate, MovimentacaoUpda
 import { VeiculoService, Veiculo } from '../../core/services/veiculo.service';
 import { VagaService } from '../../core/services/vaga.service';
 import { TabelaPrecoService, TabelaPreco } from '../../core/services/tabela-preco.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -43,12 +44,11 @@ export class MovimentacoesComponent implements OnInit {
     public movimentacaoService: MovimentacaoService,
     public veiculoService: VeiculoService,
     public vagaService: VagaService,
-    private tabelaPrecoService: TabelaPrecoService
+    private tabelaPrecoService: TabelaPrecoService,
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
-    const now = new Date().toISOString().slice(0, 16);
-    this.form = { id_veiculo: 0, id_vaga: 0, data_entrada: now, data_saida: now, tempo_minutos: 0, valor_total: 0 };
     this.veiculoService.listar().subscribe({
       next: (r) => {
         this.veiculos = r;
@@ -101,6 +101,7 @@ export class MovimentacoesComponent implements OnInit {
   }
 
   carregar(): void {
+    this.erro = '';
     this.movimentacaoService.listar().subscribe({
       next: (r) => (this.dataSource.data = r),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -108,12 +109,14 @@ export class MovimentacoesComponent implements OnInit {
   }
 
   salvar(): void {
-    if (!this.form.id_veiculo || !this.form.id_vaga) return;
+    this.erro = '';
+    // if (!this.form.id_veiculo || !this.form.id_vaga) return;
     if (this.editando) {
       this.salvarEdicao(this.editando, this.form);
     } else {
       this.movimentacaoService.criar(this.form).subscribe({
         next: () => {
+          this.notification.sucesso('Movimentação registrada com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -153,8 +156,10 @@ export class MovimentacoesComponent implements OnInit {
   }
 
   salvarEdicao(id: number, d: MovimentacaoUpdate): void {
+    this.erro = '';
     this.movimentacaoService.atualizar(id, d).subscribe({
       next: () => {
+        this.notification.sucesso('Movimentação atualizada com sucesso!');
         this.limparForm();
         this.carregar();
       },
@@ -163,13 +168,18 @@ export class MovimentacoesComponent implements OnInit {
   }
 
   cancelarEdicao(): void {
+    this.erro = '';
     this.limparForm();
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir esta movimentação?')) return;
     this.movimentacaoService.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Movimentação excluída com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

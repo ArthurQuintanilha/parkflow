@@ -3,6 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { VeiculoService, Veiculo, VeiculoCreate } from '../../core/services/veiculo.service';
 import { TipoVeiculoService } from '../../core/services/tipo-veiculo.service';
 import { ClienteService } from '../../core/services/cliente.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -30,7 +31,8 @@ export class VeiculosComponent implements OnInit {
   constructor(
     public veiculoService: VeiculoService,
     public tipoVeiculoService: TipoVeiculoService,
-    public clienteService: ClienteService
+    public clienteService: ClienteService,
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -40,6 +42,7 @@ export class VeiculosComponent implements OnInit {
   }
 
   carregar(): void {
+    this.erro = '';
     this.veiculoService.listar(true).subscribe({
       next: (r) => (this.dataSource.data = r as Veiculo[]),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -57,9 +60,11 @@ export class VeiculosComponent implements OnInit {
   }
 
   salvar(): void {
+    this.erro = '';
     if (!this.form.placa.trim() || !this.form.marca.trim() || !this.form.modelo.trim() || !this.form.id_tipo_veiculo || !this.form.id_cliente) return;
     this.veiculoService.criar(this.form).subscribe({
       next: () => {
+        this.notification.sucesso('Veículo cadastrado com sucesso!');
         this.form = { placa: '', marca: '', modelo: '', cor: '', id_tipo_veiculo: this.tiposVeiculo[0]?.id_tipo_veiculo || 0, id_cliente: this.clientes[0]?.id_cliente || 0 };
         this.carregar();
       },
@@ -68,9 +73,13 @@ export class VeiculosComponent implements OnInit {
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir este veículo?')) return;
     this.veiculoService.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Veículo excluído com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }

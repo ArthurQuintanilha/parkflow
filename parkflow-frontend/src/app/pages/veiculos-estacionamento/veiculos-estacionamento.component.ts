@@ -3,6 +3,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { VeiculoService, Veiculo, VeiculoCreate, VeiculoUpdate } from '../../core/services/veiculo.service';
 import { TipoVeiculoService } from '../../core/services/tipo-veiculo.service';
 import { ClienteService } from '../../core/services/cliente.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { DataTableColumn } from '../../shared/data-table/data-table-column.interface';
 
 @Component({
@@ -31,7 +32,8 @@ export class VeiculosEstacionamentoComponent implements OnInit {
   constructor(
     public veiculoService: VeiculoService,
     public tipoVeiculoService: TipoVeiculoService,
-    public clienteService: ClienteService
+    public clienteService: ClienteService,
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -41,6 +43,7 @@ export class VeiculosEstacionamentoComponent implements OnInit {
   }
 
   carregar(): void {
+    this.erro = '';
     this.veiculoService.listar(true).subscribe({
       next: (r) => (this.dataSource.data = r as Veiculo[]),
       error: (e) => (this.erro = e.error?.error || 'Erro ao carregar')
@@ -58,12 +61,14 @@ export class VeiculosEstacionamentoComponent implements OnInit {
   }
 
   salvar(): void {
+    this.erro = '';
     // if (!this.form.placa.trim() || !this.form.marca.trim() || !this.form.modelo.trim() || !this.form.id_tipo_veiculo || !this.form.id_cliente) return;
     if (this.editando) {
       this.salvarEdicao(this.editando, this.form);
     } else {
       this.veiculoService.criar(this.form).subscribe({
         next: () => {
+          this.notification.sucesso('Veículo cadastrado com sucesso!');
           this.limparForm();
           this.carregar();
         },
@@ -98,8 +103,10 @@ export class VeiculosEstacionamentoComponent implements OnInit {
   }
 
   salvarEdicao(id: number, d: VeiculoUpdate): void {
+    this.erro = '';
     this.veiculoService.atualizar(id, d).subscribe({
       next: () => {
+        this.notification.sucesso('Veículo atualizado com sucesso!');
         this.limparForm();
         this.carregar();
       },
@@ -108,13 +115,18 @@ export class VeiculosEstacionamentoComponent implements OnInit {
   }
 
   cancelarEdicao(): void {
+    this.erro = '';
     this.limparForm();
   }
 
   excluir(id: number): void {
+    this.erro = '';
     if (!confirm('Excluir este veículo?')) return;
     this.veiculoService.excluir(id).subscribe({
-      next: () => this.carregar(),
+      next: () => {
+        this.notification.sucesso('Veículo excluído com sucesso!');
+        this.carregar();
+      },
       error: (e) => (this.erro = e.error?.error || 'Erro ao excluir')
     });
   }
